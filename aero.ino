@@ -1,29 +1,14 @@
 
-//readme use 43 A BTS 7960 WITH HEATSINK TWO FOR EACH 
-// CHOOSE Aan actuator with hall effects sensors to choose and see the status oof the actuators and make it turn back to the standard position of the dday 
-// the possitiont of the actuator depends on the voltage sent to the actuator PINOUT WILL BE FURNISHED WITHIN THE CODE OF THE ARDUINO IN THE PINOUTFOLDER THIS IS ONLY SUITED FOR 1 ACTUATOR and will have to be inverted
-//it is what it is loul 
 
-
-
-
-  // lib address https://github.com/ElectronicCats/mpu6050/wiki
-
-*/
-#include <LiquidCrystal_I2C.h>
 #include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
-LiquidCrystal_I2C lcd(0x27,20,4);
-/* MPU6050 default I2C address is 0x68*/
 MPU6050 mpu;
 
+-------------------------------------------------------------------------------------------------------------------------------*/ 
 #define OUTPUT_READABLE_YAWPITCHROLL
-//#define OUTPUT_READABLE_QUATERNION
-//#define OUTPUT_READABLE_EULER
-//#define OUTPUT_READABLE_REALACCEL
-//#define OUTPUT_READABLE_WORLDACCEL
-//#define OUTPUT_TEAPOT
+
+const int  buttonPin = 2;    // the pin that the pushbutton is attached to
 
 int const INTERRUPT_PIN = 2;  // Define the interruption #0 pin
 bool blinkState;
@@ -55,6 +40,10 @@ void DMPDataReady() {
 }
 
 void setup() {
+ //____________________
+const int  buttonPin = 2;    // the pin that the pushbutton is attached to
+//________________
+
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
     Wire.begin();
     Wire.setClock(400000); // 400kHz I2C clock. Comment on this line if having compilation difficulties
@@ -70,6 +59,7 @@ void setup() {
   mpu.initialize();
   pinMode(INTERRUPT_PIN, INPUT);
 
+ 
   /*Verify connection*/
   Serial.println(F("Testing MPU6050 connection..."));
   if(mpu.testConnection() == false){
@@ -123,13 +113,10 @@ void setup() {
     Serial.print(F("DMP Initialization failed (code ")); //Print the error code
     Serial.print(devStatus);
     Serial.println(F(")"));
-    // 1 = initial memory load failed
-    // 2 = DMP configuration updates failed
+   
+
   }
   pinMode(LED_BUILTIN, OUTPUT);
-
-   lcd.init();                      // initialize the lcd 
-  lcd.backlight();
 }
 
 void loop() {
@@ -148,8 +135,6 @@ void loop() {
       Serial.print(ypr[1] * 180/M_PI);
       Serial.print("\t");
       Serial.println(ypr[2] * 180/M_PI);
-           lcd.print((ypr[0] * 180/M_PI));
-            lcd.print(("ypr[1] * 180/M_PI"));
     #endif
         
     #ifdef OUTPUT_READABLE_QUATERNION
@@ -192,8 +177,7 @@ void loop() {
     #endif
 
     #ifdef OUTPUT_READABLE_WORLDACCEL
-      /* Display initial world-frame acceleration, adjusted to remove gravity
-      and rotated based on known orientation from Quaternion */
+      
       mpu.dmpGetQuaternion(&q, FIFOBuffer);
       mpu.dmpGetAccel(&aa, FIFOBuffer);
       mpu.dmpGetGravity(&gravity, &q);
@@ -208,7 +192,7 @@ void loop() {
     #endif
     
     #ifdef OUTPUT_TEAPOT
-      /* Display quaternion values in InvenSense Teapot demo format */
+     
       teapotPacket[2] = FIFOBuffer[0];
       teapotPacket[3] = FIFOBuffer[1];
       teapotPacket[4] = FIFOBuffer[4];
@@ -224,7 +208,42 @@ void loop() {
   /* Blink LED to indicate activity */
   blinkState = !blinkState;
   digitalWrite(LED_BUILTIN, blinkState);
+
+
+if (buttonState == HIGH) {
+Serial.println("Tiresaving Mode On");
+//Now thess
+mpu.dmpGetQuaternion(&q, FIFOBuffer);
+      mpu.dmpGetGravity(&gravity, &q);
+      mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+      Serial.print("ypr\t");
+      Serial.print(ypr[0] * 180/M_PI);
+      Serial.print("\t");
+      Serial.print(ypr[1] * 180/M_PI);
+      Serial.print("\t");
+      Serial.println(ypr[2] * 180/M_PI);
+float RXpast = Serial.read(ypr[0] * 180/M_PI);
+float RYpast = Serial.read(ypr[1] * 180/M_PI);
+float RZpast = Serial.read(ypr[2] * 180/M_PI);
+delay(750);
+float RXFuture = Serial.read(ypr[0] * 180/M_PI);
+float RYFuture = Serial.read(ypr[1] * 180/M_PI);
+float RZFuture = Serial.read(ypr[2] * 180/M_PI);
+//CurrentState
+float RXcurrent = RXpast - RXFuture;
+float RYcurrent = RXpast - RXFuture;
+float RZcurrent = RXpast - RXFuture;
+//behold now fuckton of if statements 
+
+if (RXcurrent > 0.5 && RYcurrent > 0.25) {
+  Serial.print("Brake and steer less");
+}
+
+
   }
-  lcd.setCursor(0,2);
-  lcd.print(("ypr[1] * 180/M_PI"));
+
+
+
+
+  
 }
