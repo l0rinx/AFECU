@@ -22,3 +22,9 @@ http://airfoiltools.com/airfoil/details?airfoil=goe101-il
 Yaw controlled by planetary gear inside
 ball joints both below everything lol same goes for  on the airfoil (roll) beneath right side and left side 
 pitch controled by saint esprit it is what it is 
+
+RS232 to csv protocol usage on a second rduino 
+  CSV To Interactive and evolutive Quadrant of G and Average evolution of driver's data 
+
+
+  Actuator contrl 
