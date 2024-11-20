@@ -21,6 +21,18 @@ uint16_t packetSize;    // Expected DMP packet size (default is 42 bytes)
 uint8_t FIFOBuffer[64]; // FIFO storage buffer
 
 /*---Orientation/Motion Variables---*/ 
+
+/*---actuator setup---*/ // BOTh HAVE NO HALL EFFECT SENSORS SO YOU NEED TO DO CFD AND INTERP TO GET POS
+const int actuator1ForwardPin = 2; // Digital pin connected to relay/H-bridge controlling actuator 1 forward direction
+const int actuator1ReversePin = 3; // Digital pin connected to relay/H-bridge controlling actuator 1 reverse direction
+const int actuator2ForwardPin = 4; // Digital pin connected to relay/H-bridge controlling actuator 2 forward direction
+const int actuator2ReversePin = 5; // Digital pin connected to relay/H-bridge controlling actuator 2 reverse direction
+
+const int movementTime = 5000; // Estimated time in milliseconds to move the actuator 15cm (adjust as necessary)
+
+float X = 0.6; 
+
+/*---actuator setup---*/
 Quaternion q;           // [w, x, y, z]         Quaternion container
 VectorInt16 aa;         // [x, y, z]            Accel sensor measurements
 VectorInt16 gy;         // [x, y, z]            Gyro sensor measurements
@@ -45,15 +57,25 @@ const int  buttonPin = 2;    // the pin that the pushbutton is attached to
 Wire.begin();
 //________________
 
+/*---actuator setup---*/
+  pinMode(actuator1ForwardPin, OUTPUT);
+  pinMode(actuator1ReversePin, OUTPUT);
+  pinMode(actuator2ForwardPin, OUTPUT);
+  pinMode(actuator2ReversePin, OUTPUT);
+  
+  // Make sure actuators are initially off
+  //stopActuators();
+  }
+
+
+/*---actuator setup---*/
 
   // Initialize MPU6050
-  Serial.println("Initializing MPU6050...");
-  if (!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G)) {
-    Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
+  //      Serial.println("Initializing MPU6050...");
+  //if (!mpu.begin(MPU6050_SCALE_2000DPS, MPU6050_RANGE_2G)) {
+    //      Serial.println("Could not find a valid MPU6050 sensor, check wiring!");
     while (1);
 
-  mpu.calibrateGyro();
-  mpu.setThreshold(3);
 
 
   #if I2CDEV_IMPLEMENTATION == I2CDEV_ARDUINO_WIRE
@@ -236,7 +258,7 @@ Vector rawAccel = mpu.readRawAccel();
 
   delay(100);  // Adjust the delay as needed
 
-  
+
   /* Blink LED to indicate activity */
   blinkState = !blinkState;
   digitalWrite(LED_BUILTIN, blinkState);
@@ -270,10 +292,23 @@ float RZcurrent = RXpast - RXFuture;
 if (RXcurrent > 0.5 && RYcurrent > 0.25) {
   Serial.print("Brake and steer less");
 }
+ digitalWrite(actuator1ForwardPin, HIGH);
+    delay(movementTime); // Wait for the movement to complete
+    digitalWrite(actuator1ForwardPin, LOW);
 
+    // Retract actuator 2 15cm
+    digitalWrite(actuator2ReversePin, HIGH);
+    delay(movementTime); // Wait for the movement to complete
+    digitalWrite(actuator2ReversePin, LOW);
 
   }
-
+void stopActuators() {
+  // Ensure all actuator control pins are off
+  digitalWrite(actuator1ForwardPin, LOW);
+  digitalWrite(actuator1ReversePin, LOW);
+  digitalWrite(actuator2ForwardPin, LOW);
+  digitalWrite(actuator2ReversePin, LOW);
+}
 
 
 
